@@ -1,0 +1,5 @@
+## Dependences
+
+```bash
+rofi kitty
+```
