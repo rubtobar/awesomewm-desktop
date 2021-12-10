@@ -290,7 +290,7 @@ globalkeys = gears.table.join(
     -- Start programs
     awful.key({ modkey,           }, "q", function () awful.spawn("google-chrome") end,
               {description = "open browser", group = "launcher"}),
-    awful.key({ modkey,           }, "e", function () awful.spawn("rofi -show run") end,
+    awful.key({ modkey,           }, "e", function () awful.spawn("./.config/rofi/launchers/colorful/launcher.sh") end,
                 {description = "open apps menu", group = "launcher"}),
 
     awful.key({ modkey,           }, "l",     function () awful.tag.incmwfact( 0.05)          end,
