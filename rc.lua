@@ -17,6 +17,14 @@ local hotkeys_popup = require("awful.hotkeys_popup")
 -- Enable hotkeys help widget for VIM and other apps
 -- when client with a matching name is opened:
 require("awful.hotkeys_popup.keys")
+-- Enable awesome wigets library
+local batteryarc_widget = require("awesome-wm-widgets.batteryarc-widget.batteryarc")
+local volume_widget = require('awesome-wm-widgets.volume-widget.volume')
+local logout_menu_widget = require("awesome-wm-widgets.logout-menu-widget.logout-menu")
+local brightness_widget = require("awesome-wm-widgets.brightness-widget.brightness")
+local ram_widget = require("awesome-wm-widgets.ram-widget.ram-widget")
+local net_speed_widget = require("awesome-wm-widgets.net-speed-widget.net-speed")
+local cpu_widget = require("awesome-wm-widgets.cpu-widget.cpu-widget")
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -68,48 +76,13 @@ awful.layout.layouts = {
     awful.layout.suit.tile.bottom,
     awful.layout.suit.tile.top,
     awful.layout.suit.fair,
-    -- awful.layout.suit.fair.horizontal,
-    -- awful.layout.suit.spiral,
-    -- awful.layout.suit.spiral.dwindle,
-    -- awful.layout.suit.max,
-    -- awful.layout.suit.max.fullscreen,
-    -- awful.layout.suit.magnifier,
-    -- awful.layout.suit.corner.nw,
-    -- awful.layout.suit.corner.ne,
-    -- awful.layout.suit.corner.sw,
-    -- awful.layout.suit.corner.se,
 }
 -- }}}
 
 -- {{{ Menu
--- Create a launcher widget and a main menu
---[[
-
-myawesomemenu = {
-   { "hotkeys", function() hotkeys_popup.show_help(nil, awful.screen.focused()) end },
-   { "manual", terminal .. " -e man awesome" },
-   { "edit config", editor_cmd .. " " .. awesome.conffile },
-   { "restart", awesome.restart },
-   { "quit", function() awesome.quit() end },
-}
-
-mymainmenu = awful.menu({ items = { { "awesome", myawesomemenu, beautiful.awesome_icon },
-                                    { "open terminal", terminal }
-                                  }
-                        })
-
-mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
-                                     menu = mymainmenu })
-
-]]--
-
-
 -- Menubar configuration
 menubar.utils.terminal = terminal -- Set the terminal for applications that require it
 -- }}}
-
--- Keyboard map indicator and switcher
-mykeyboardlayout = awful.widget.keyboardlayout()
 
 -- {{{ Wibar
 -- Create a textclock widget
@@ -216,10 +189,34 @@ awful.screen.connect_for_each_screen(function(s)
         s.mytasklist, -- Middle widget
         { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
-            mykeyboardlayout,
+            spacing        = 15,
+            cpu_widget({
+                width = 70,
+                step_width = 2,
+                step_spacing = 0,
+                color = '#434c5e'
+            }),
+            ram_widget(),
+            net_speed_widget(),
+            volume_widget{
+                widget_type = 'arc'
+            },
+            batteryarc_widget({
+                show_current_level = true,
+                arc_thickness = 1,
+            }),
+            brightness_widget{
+                type = 'arc',
+                program = 'light',
+                step = 2,
+            },
             wibox.widget.systray(),
             mytextclock,
             s.mylayoutbox,
+            logout_menu_widget{
+                font = 'b612 mono 11',
+                onlock = function() awful.spawn.with_shell('i3lock-fancy') end
+            },
         },
     }
 end)
@@ -322,23 +319,22 @@ globalkeys = gears.table.join(
               end,
               {description = "restore minimized", group = "client"}),
 
-    -- Prompt
-    awful.key({ modkey },            "r",     function () awful.screen.focused().mypromptbox:run() end,
-              {description = "run prompt", group = "launcher"}),
-
-    awful.key({ modkey }, "x",
-              function ()
-                  awful.prompt.run {
-                    prompt       = "Run Lua code: ",
-                    textbox      = awful.screen.focused().mypromptbox.widget,
-                    exe_callback = awful.util.eval,
-                    history_path = awful.util.get_cache_dir() .. "/history_eval"
-                  }
-              end,
-              {description = "lua execute prompt", group = "awesome"}),
     -- Menubar
     awful.key({ modkey }, "p", function() menubar.show() end,
-              {description = "show the menubar", group = "launcher"})
+              {description = "show the menubar", group = "launcher"}),
+
+    -- Lock screen with i3lock-fancy
+    awful.key({ modkey, "Control" }, "l", function() awful.spawn("i3lock-fancy") end,
+              {description = "lock screen", group = "launcher"}),
+    
+    -- Change monitor brightness
+    awful.key({ }, "XF86MonBrightnessUp",   function () brightness_widget:inc() end, {description = "increase brightness", group = "custom"}),
+    awful.key({ }, "XF86MonBrightnessDown", function () brightness_widget:dec() end, {description = "decrease brightness", group = "custom"}),
+
+    -- Change volume
+    awful.key({ }, "XF86AudioRaiseVolume", function() volume_widget:inc(5) end),
+    awful.key({ }, "XF86AudioLowerVolume", function() volume_widget:dec(5) end),
+    awful.key({ }, "XF86AudioMute",        function() volume_widget:toggle() end)
 )
 
 clientkeys = gears.table.join(
@@ -577,3 +573,4 @@ end)
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
+
