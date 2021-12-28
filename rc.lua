@@ -76,7 +76,9 @@ awful.layout.layouts = {
 -- }}}
 
 -- {{{ spawn programs in startup
-awful.spawn.with_shell("picom")
+awful.spawn.with_shell("picom --backend glx") -- solves tearing problem
+--compton --backend glx --paint-on-overlay --glx-no-stencil --vsync opengl-swc --unredir-if-possible
+awful.spawn.with_shell("pkill -f glava*")
 awful.spawn.with_shell('glava --desktop')
 -- }}}
 
@@ -175,8 +177,21 @@ awful.screen.connect_for_each_screen(function(s)
         buttons = tasklist_buttons
     }
 
+    -- Give rounded shape to wibar
+    sh = function(cr, width, height)
+        gears.shape.rounded_rect(cr, width, height, 5)
+    end
+
     -- Create the wibox
-    s.mywibox = awful.wibar({ position = "top", screen = s })
+    s.mywibox = awful.wibox({ 
+        --position = "top", 
+        screen = s, 
+        shape = sh,
+        --stretch = true,
+        width = "99%",
+        height = "24",
+        margins = { top = 5, bottom = 5, left = 5, right = 5 }
+    })
 
     -- Add widgets to the wibox
     s.mywibox:setup {
